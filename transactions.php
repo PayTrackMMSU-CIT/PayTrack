@@ -119,36 +119,36 @@ if (!empty($search)) {
 // Add order by
 $order_clause = " ORDER BY p.payment_date DESC";
 
-// Add pagination
-$limit_clause = " LIMIT :offset, :limit";
+// Add pagination for PostgreSQL
+$limit_clause = " LIMIT :limit OFFSET :offset";
 
 // Execute count query
 $count_stmt = $db->prepare($count_query . $where_clause);
 
-// Bind parameters for count query
+// Bind parameters for count query with proper PostgreSQL types
 if (!hasRole([ROLE_ADMIN]) && (empty($managed_orgs) || count($managed_orgs) === 0)) {
-    $count_stmt->bindParam(':user_id', $user_id);
+    $count_stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
 }
 
 if (!empty($filter_status)) {
-    $count_stmt->bindParam(':status', $filter_status);
+    $count_stmt->bindParam(':status', $filter_status, PDO::PARAM_STR);
 }
 
 if (!empty($filter_org)) {
-    $count_stmt->bindParam(':org_id', $filter_org);
+    $count_stmt->bindParam(':org_id', $filter_org, PDO::PARAM_INT);
 }
 
 if (!empty($filter_date_from)) {
-    $count_stmt->bindParam(':date_from', $filter_date_from);
+    $count_stmt->bindParam(':date_from', $filter_date_from, PDO::PARAM_STR);
 }
 
 if (!empty($filter_date_to)) {
-    $count_stmt->bindParam(':date_to', $filter_date_to);
+    $count_stmt->bindParam(':date_to', $filter_date_to, PDO::PARAM_STR);
 }
 
 if (!empty($search)) {
     $search_param = "%$search%";
-    $count_stmt->bindParam(':search', $search_param);
+    $count_stmt->bindParam(':search', $search_param, PDO::PARAM_STR);
 }
 
 $count_stmt->execute();
@@ -164,29 +164,29 @@ $offset = ($page - 1) * $items_per_page;
 // Execute main query
 $stmt = $db->prepare($base_query . $where_clause . $order_clause . $limit_clause);
 
-// Bind parameters for main query
+// Bind parameters for main query with proper PostgreSQL types
 if (!hasRole([ROLE_ADMIN]) && (empty($managed_orgs) || count($managed_orgs) === 0)) {
-    $stmt->bindParam(':user_id', $user_id);
+    $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
 }
 
 if (!empty($filter_status)) {
-    $stmt->bindParam(':status', $filter_status);
+    $stmt->bindParam(':status', $filter_status, PDO::PARAM_STR);
 }
 
 if (!empty($filter_org)) {
-    $stmt->bindParam(':org_id', $filter_org);
+    $stmt->bindParam(':org_id', $filter_org, PDO::PARAM_INT);
 }
 
 if (!empty($filter_date_from)) {
-    $stmt->bindParam(':date_from', $filter_date_from);
+    $stmt->bindParam(':date_from', $filter_date_from, PDO::PARAM_STR);
 }
 
 if (!empty($filter_date_to)) {
-    $stmt->bindParam(':date_to', $filter_date_to);
+    $stmt->bindParam(':date_to', $filter_date_to, PDO::PARAM_STR);
 }
 
 if (!empty($search)) {
-    $stmt->bindParam(':search', $search_param);
+    $stmt->bindParam(':search', $search_param, PDO::PARAM_STR);
 }
 
 $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
