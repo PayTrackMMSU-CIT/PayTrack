@@ -139,7 +139,12 @@ $officers_query = "SELECT u.id, u.full_name, u.email, u.student_id, om.role
                  WHERE om.org_id = :org_id
                  AND om.role IN ('president', 'treasurer', 'officer')
                  AND om.status = 'active'
-                 ORDER BY FIELD(om.role, 'president', 'treasurer', 'officer'), u.full_name";
+                 ORDER BY CASE 
+                    WHEN om.role = 'president' THEN 1 
+                    WHEN om.role = 'treasurer' THEN 2 
+                    WHEN om.role = 'officer' THEN 3 
+                    ELSE 4 
+                 END, u.full_name";
 
 $officers_stmt = $db->prepare($officers_query);
 $officers_stmt->bindParam(':org_id', $org_id);

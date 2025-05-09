@@ -2,7 +2,8 @@
 // Set page title
 $page_title = 'Organizations';
 
-// Include header
+// Include database and header
+require_once 'config/database.php';
 require_once 'includes/header.php';
 
 // Require login
