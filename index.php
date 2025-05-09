@@ -4,22 +4,23 @@ require_once 'config/database.php';
 require_once 'config/constants.php';
 require_once 'includes/functions.php';
 
-// Initialize database
+// Start session for flash messages
+session_start();
+
+// Initialize database connection
 $database = new Database();
 
-// Force recreate the SQLite database if it doesn't exist or if reset flag is set
-if (!file_exists('paytrack.db') || (isset($_GET['reset']) && $_GET['reset'] === '1')) {
-    // Remove existing database if it exists
-    if (file_exists('paytrack.db')) {
-        unlink('paytrack.db');
-    }
-    
-    // Initialize fresh database
+// Initialize database if reset flag is set
+if (isset($_GET['reset']) && $_GET['reset'] === '1') {
+    // Initialize or reset database
     $success = $database->initializeDatabase();
+    
     if ($success) {
         // Set flash message for successful initialization
-        session_start();
         setFlashMessage('success', 'Database initialized successfully.');
+    } else {
+        // Set error message if initialization failed
+        setFlashMessage('error', 'Database initialization failed. Please check the error logs.');
     }
 }
 

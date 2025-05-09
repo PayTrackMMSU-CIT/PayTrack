@@ -1,16 +1,34 @@
 <?php
 // Database configuration
 class Database {
-    private $host = 'localhost';
-    private $db_name = 'paytrack_db';
-    private $username = 'root';
-    private $password = '';
+    private $host;
+    private $db_name;
+    private $username;
+    private $password;
+    private $port;
     private $conn;
-    private $initialized = false;
     
     public function __construct() {
-        // Use SQLite for development environment
-        $this->initialized = file_exists('paytrack.db');
+        // Get the database configuration from environment variables
+        $this->host = getenv('PGHOST') ?: 'localhost';
+        $this->db_name = getenv('PGDATABASE') ?: 'paytrack_db';
+        $this->username = getenv('PGUSER') ?: 'postgres';
+        $this->password = getenv('PGPASSWORD') ?: '';
+        $this->port = getenv('PGPORT') ?: '5432';
+    }
+    
+    /**
+     * Check if a specific table exists in the database
+     * @param string $table_name The name of the table to check
+     * @return bool True if table exists, false otherwise
+     */
+    private function tableExists($table_name) {
+        $conn = $this->getConnection();
+        $query = "SELECT to_regclass('public.$table_name')";
+        $stmt = $conn->prepare($query);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_NUM);
+        return $result[0] !== null;
     }
 
     // Method to get the database connection
@@ -18,8 +36,9 @@ class Database {
         $this->conn = null;
 
         try {
-            // Use SQLite for development
-            $this->conn = new PDO('sqlite:paytrack.db');
+            // Use PostgreSQL
+            $dsn = "pgsql:host={$this->host};port={$this->port};dbname={$this->db_name}";
+            $this->conn = new PDO($dsn, $this->username, $this->password);
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
         } catch(PDOException $exception) {
@@ -37,15 +56,15 @@ class Database {
             // Users table
             $users_table = "
             CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                student_id TEXT UNIQUE NOT NULL,
-                full_name TEXT NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
-                role TEXT NOT NULL DEFAULT 'student',
-                department TEXT,
-                year_level TEXT,
-                profile_image TEXT DEFAULT 'default.svg',
+                id SERIAL PRIMARY KEY,
+                student_id VARCHAR(20) UNIQUE NOT NULL,
+                full_name VARCHAR(100) NOT NULL,
+                email VARCHAR(100) UNIQUE NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                role VARCHAR(20) NOT NULL DEFAULT 'student',
+                department VARCHAR(50),
+                year_level VARCHAR(20),
+                profile_image VARCHAR(100) DEFAULT 'default.svg',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )";
@@ -53,16 +72,16 @@ class Database {
             // Organizations table
             $organizations_table = "
             CREATE TABLE IF NOT EXISTS organizations (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                acronym TEXT NOT NULL,
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(100) NOT NULL,
+                acronym VARCHAR(20) NOT NULL,
                 description TEXT,
-                logo TEXT DEFAULT 'org_default.svg',
+                logo VARCHAR(100) DEFAULT 'org_default.svg',
                 adviser_id INTEGER,
                 president_id INTEGER,
                 treasurer_id INTEGER,
-                membership_fee REAL DEFAULT 0.00,
-                status TEXT DEFAULT 'active',
+                membership_fee DECIMAL(10,2) DEFAULT 0.00,
+                status VARCHAR(20) DEFAULT 'active',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (adviser_id) REFERENCES users(id) ON DELETE SET NULL,
@@ -73,11 +92,11 @@ class Database {
             // Organization members table
             $org_members_table = "
             CREATE TABLE IF NOT EXISTS org_members (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 org_id INTEGER NOT NULL,
                 user_id INTEGER NOT NULL,
-                role TEXT DEFAULT 'member',
-                status TEXT DEFAULT 'pending',
+                role VARCHAR(20) DEFAULT 'member',
+                status VARCHAR(20) DEFAULT 'pending',
                 joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (org_id) REFERENCES organizations(id) ON DELETE CASCADE,
@@ -88,14 +107,14 @@ class Database {
             // Payment categories table
             $payment_categories_table = "
             CREATE TABLE IF NOT EXISTS payment_categories (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 org_id INTEGER NOT NULL,
-                name TEXT NOT NULL,
+                name VARCHAR(100) NOT NULL,
                 description TEXT,
-                amount REAL NOT NULL,
+                amount DECIMAL(10,2) NOT NULL,
                 due_date DATE NULL,
-                is_recurring BOOLEAN DEFAULT 0,
-                recurrence TEXT DEFAULT 'one-time',
+                is_recurring BOOLEAN DEFAULT FALSE,
+                recurrence VARCHAR(20) DEFAULT 'one-time',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (org_id) REFERENCES organizations(id) ON DELETE CASCADE
@@ -104,15 +123,15 @@ class Database {
             // Payments table
             $payments_table = "
             CREATE TABLE IF NOT EXISTS payments (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 user_id INTEGER NOT NULL,
                 org_id INTEGER NOT NULL,
                 category_id INTEGER NOT NULL,
-                amount REAL NOT NULL,
-                payment_method TEXT DEFAULT 'cash',
-                reference_number TEXT,
-                status TEXT DEFAULT 'pending',
-                proof_of_payment TEXT,
+                amount DECIMAL(10,2) NOT NULL,
+                payment_method VARCHAR(20) DEFAULT 'cash',
+                reference_number VARCHAR(50),
+                status VARCHAR(20) DEFAULT 'pending',
+                proof_of_payment VARCHAR(100),
                 notes TEXT,
                 payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 verified_by INTEGER,
@@ -128,13 +147,13 @@ class Database {
             // Notifications table
             $notifications_table = "
             CREATE TABLE IF NOT EXISTS notifications (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 user_id INTEGER NOT NULL,
                 org_id INTEGER NULL,
-                title TEXT NOT NULL,
+                title VARCHAR(100) NOT NULL,
                 message TEXT NOT NULL,
-                type TEXT DEFAULT 'other',
-                is_read INTEGER DEFAULT 0,
+                type VARCHAR(20) DEFAULT 'other',
+                is_read BOOLEAN DEFAULT FALSE,
                 related_id INTEGER NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -271,7 +290,7 @@ class Database {
                 ");
                 
                 foreach ($categories as $category) {
-                    $is_recurring = ($category[3] != 'one-time') ? 1 : 0;
+                    $is_recurring = ($category[3] != 'one-time') ? true : false;
                     $category_insert->bindParam(':org_id', $org_id);
                     $category_insert->bindParam(':name', $category[0]);
                     $category_insert->bindParam(':description', $category[1]);
