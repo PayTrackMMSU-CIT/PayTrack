@@ -243,7 +243,7 @@ function getUnreadNotificationsCount($user_id = null) {
     $database = new Database();
     $db = $database->getConnection();
     
-    $query = "SELECT COUNT(*) as count FROM notifications WHERE user_id = :user_id AND is_read = 0";
+    $query = "SELECT COUNT(*) as count FROM notifications WHERE user_id = :user_id AND is_read = FALSE";
     $stmt = $db->prepare($query);
     $stmt->bindParam(':user_id', $user_id);
     $stmt->execute();
@@ -278,7 +278,7 @@ function getUserNotifications($user_id = null, $limit = 10, $unread_only = false
               WHERE n.user_id = :user_id ";
     
     if ($unread_only) {
-        $query .= "AND n.is_read = 0 ";
+        $query .= "AND n.is_read = FALSE ";
     }
     
     $query .= "ORDER BY n.created_at DESC LIMIT :limit";
@@ -310,7 +310,7 @@ function markNotificationAsRead($notification_id, $user_id = null) {
     $database = new Database();
     $db = $database->getConnection();
     
-    $query = "UPDATE notifications SET is_read = 1 WHERE id = :id AND user_id = :user_id";
+    $query = "UPDATE notifications SET is_read = TRUE WHERE id = :id AND user_id = :user_id";
     $stmt = $db->prepare($query);
     $stmt->bindParam(':id', $notification_id);
     $stmt->bindParam(':user_id', $user_id);
@@ -501,12 +501,12 @@ function getOrganizationPaymentStats($org_id) {
         $month_totals[] = 0;
     }
     
-    $trends_query = "SELECT DATE_FORMAT(payment_date, '%b %Y') as month, SUM(amount) as total
+    $trends_query = "SELECT TO_CHAR(payment_date, 'Mon YYYY') as month, SUM(amount) as total
                     FROM payments
                     WHERE org_id = :org_id AND status = 'completed'
-                    AND payment_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-                    GROUP BY DATE_FORMAT(payment_date, '%b %Y')
-                    ORDER BY payment_date";
+                    AND payment_date >= CURRENT_DATE - INTERVAL '6 months'
+                    GROUP BY TO_CHAR(payment_date, 'Mon YYYY')
+                    ORDER BY MIN(payment_date)";
     
     $trends_stmt = $db->prepare($trends_query);
     $trends_stmt->bindParam(':org_id', $org_id);
@@ -661,7 +661,7 @@ function getDashboardStats($user_id = null) {
                                JOIN organizations o ON pc.org_id = o.id
                                JOIN org_members om ON pc.org_id = om.org_id
                                WHERE om.user_id = :user_id AND om.status = 'active'
-                               AND (pc.due_date IS NULL OR pc.due_date >= CURDATE())
+                               AND (pc.due_date IS NULL OR pc.due_date >= CURRENT_DATE)
                                AND NOT EXISTS (
                                    SELECT 1 FROM payments p
                                    WHERE p.user_id = :user_id AND p.category_id = pc.id
