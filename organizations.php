@@ -216,7 +216,7 @@ if (!hasRole([ROLE_ADMIN])) {
     </div>
     <?php else: ?>
     <div class="bg-white rounded-lg shadow p-8 text-center">
-        <img src="https://pixabay.com/get/g003060233e5444330adc115eef06a4fede7780bfcfe2db6d736c8303fc76ffb2698ac7e61185eceed808e003a38b32a5574e4a563b2ff485fffc44f27e8c6214_1280.jpg" alt="No organizations found" class="w-40 h-40 object-cover mx-auto rounded-full mb-4">
+        <i class="fas fa-building text-gray-300 text-6xl mb-4"></i>
         <h3 class="text-xl font-bold text-gray-800 mb-2">No Organizations Found</h3>
         <p class="text-gray-600 mb-4">No organizations match your current search criteria.</p>
         <a href="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" class="inline-block px-4 py-2 bg-blue-800 text-white rounded hover:bg-blue-700">

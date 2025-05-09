@@ -181,7 +181,7 @@ $stats = getDashboardStats();
                 </div>
             <?php else: ?>
                 <div class="text-center py-8">
-                    <img src="https://pixabay.com/get/g69ea01953a8fc2965f3f6e80286b3d1dec70c3f27d58a92cd56dddf15838a4ba082dbb3b64eba331e6ad6653402d808cfcce193d0108eb5599a67c11f3144787_1280.jpg" alt="No transactions" class="w-32 h-32 object-cover mx-auto rounded-full mb-4">
+                    <i class="fas fa-exchange-alt text-gray-300 text-5xl mb-4"></i>
                     <p class="text-gray-500">No recent transactions found.</p>
                     <a href="organizations.php" class="mt-2 inline-block px-4 py-2 bg-blue-800 text-white rounded hover:bg-blue-700">Explore Organizations</a>
                 </div>
@@ -263,7 +263,7 @@ $stats = getDashboardStats();
     </div>
     <?php else: ?>
     <div class="bg-white rounded-lg shadow p-8 text-center">
-        <img src="https://pixabay.com/get/geb7a7bbd77259158ba7e97882d8dec8511e25dfe0149536854c56c1a3c889677198181f9538f9f0f578bab94736ae4f839dd5bc4511d277b4743bfef03fe5205_1280.jpg" alt="Join Organizations" class="w-40 h-40 object-cover mx-auto rounded-full mb-4">
+        <i class="fas fa-users text-gray-300 text-6xl mb-4"></i>
         <h3 class="text-xl font-bold text-gray-800 mb-2">Join an Organization</h3>
         <p class="text-gray-600 mb-4">You haven't joined any organizations yet. Explore available organizations at MMSU-CIT.</p>
         <a href="organizations.php" class="inline-block px-4 py-2 bg-blue-800 text-white rounded hover:bg-blue-700">
