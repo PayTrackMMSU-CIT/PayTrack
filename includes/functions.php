@@ -245,11 +245,11 @@ function getUnreadNotificationsCount($user_id = null) {
     
     $query = "SELECT COUNT(*) as count FROM notifications WHERE user_id = :user_id AND is_read = FALSE";
     $stmt = $db->prepare($query);
-    $stmt->bindParam(':user_id', $user_id);
+    $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
     $stmt->execute();
     
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $row['count'];
+    return intval($row['count']);
 }
 
 /**
@@ -284,7 +284,7 @@ function getUserNotifications($user_id = null, $limit = 10, $unread_only = false
     $query .= "ORDER BY n.created_at DESC LIMIT :limit";
     
     $stmt = $db->prepare($query);
-    $stmt->bindParam(':user_id', $user_id);
+    $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
     $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
     $stmt->execute();
     
@@ -312,8 +312,8 @@ function markNotificationAsRead($notification_id, $user_id = null) {
     
     $query = "UPDATE notifications SET is_read = TRUE WHERE id = :id AND user_id = :user_id";
     $stmt = $db->prepare($query);
-    $stmt->bindParam(':id', $notification_id);
-    $stmt->bindParam(':user_id', $user_id);
+    $stmt->bindParam(':id', $notification_id, PDO::PARAM_INT);
+    $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
     $stmt->execute();
     
     return $stmt->rowCount() > 0;
@@ -338,12 +338,12 @@ function createNotification($user_id, $title, $message, $type = NOTIFICATION_OTH
               VALUES (:user_id, :org_id, :title, :message, :type, :related_id)";
     
     $stmt = $db->prepare($query);
-    $stmt->bindParam(':user_id', $user_id);
-    $stmt->bindParam(':org_id', $org_id);
-    $stmt->bindParam(':title', $title);
-    $stmt->bindParam(':message', $message);
-    $stmt->bindParam(':type', $type);
-    $stmt->bindParam(':related_id', $related_id);
+    $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+    $stmt->bindParam(':org_id', $org_id, PDO::PARAM_INT);
+    $stmt->bindParam(':title', $title, PDO::PARAM_STR);
+    $stmt->bindParam(':message', $message, PDO::PARAM_STR);
+    $stmt->bindParam(':type', $type, PDO::PARAM_STR);
+    $stmt->bindParam(':related_id', $related_id, PDO::PARAM_INT);
     
     return $stmt->execute();
 }

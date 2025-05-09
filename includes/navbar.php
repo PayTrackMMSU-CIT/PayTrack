@@ -1,7 +1,7 @@
 <?php
 // Get user's unread notifications count
-$unread_count = 0; // Temporarily disable until we fix the PostgreSQL compatibility
-$notifications = []; // Temporarily disable until we fix the PostgreSQL compatibility
+$unread_count = getUnreadNotificationsCount();
+$notifications = getUserNotifications(null, 5);
 ?>
 
 <header class="bg-white shadow">
