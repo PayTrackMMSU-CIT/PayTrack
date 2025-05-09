@@ -32,15 +32,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $database = new Database();
         $db = $database->getConnection();
         
+        // Initialize the database if it doesn't exist
+        if (!file_exists('paytrack.db')) {
+            $database->initializeDatabase();
+        }
+        
         // Check if user exists
         $query = "SELECT * FROM users WHERE student_id = :student_id LIMIT 1";
         $stmt = $db->prepare($query);
         $stmt->bindParam(':student_id', $student_id);
         $stmt->execute();
         
-        if ($stmt->rowCount() > 0) {
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+        // Get the result
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($user) {
             // Verify password
             if (password_verify($password, $user['password'])) {
                 // Store user data in session
@@ -60,10 +66,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header("Location: $redirect");
                 exit;
             } else {
-                $error = ERROR_LOGIN_FAILED;
+                $error = ERROR_LOGIN_FAILED . " (Password verification failed)";
             }
         } else {
-            $error = ERROR_LOGIN_FAILED;
+            $error = ERROR_LOGIN_FAILED . " (User not found)";
         }
     }
 }
