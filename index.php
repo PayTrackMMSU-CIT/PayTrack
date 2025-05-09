@@ -4,8 +4,10 @@ require_once 'config/database.php';
 require_once 'config/constants.php';
 require_once 'includes/functions.php';
 
-// Start session for flash messages
-session_start();
+// Start session for flash messages if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Initialize database connection
 $database = new Database();
